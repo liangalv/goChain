@@ -1,27 +1,40 @@
 package main
 
 import (
+	"crypto"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
+
+	"golang.org/x/crypto/sha3"
 )
 
 type Transaction struct {
-	ID              string
+	timestamp       time.Time
+	ID              [32]byte
 	senderAddress   [AddressLength]byte
 	receiverAddress [AddressLength]byte
-	value           uint8
-	gas             uint8
 	index           int
+	value           uint32
+	gas             uint32
 }
 
-func NewTransaction(sender [AddressLength]byte, receiver [AddressLength]byte, amount uint8) *Transaction {
-	//TODO: generate ID pseudorandomly and prevent collisions when hashing
-	return &Transaction{
-		senderAddress:   sender,
-		receiverAddress: receiver,
-		value:           amount,
+func NewTransaction(i int, v, g uint32, s, r [AddressLength]byte) *Transaction {
+	//TODO: Remember in the consensus engine you need to ensure that you're rejecting transaction with duplicates
+	time := time.Now()
+	trans := &Transaction{
+		timestamp:       time,
+		senderAddress:   s,
+		receiverAddress: r,
+		value:           v,
+		gas:             g,
+		index:           i,
 	}
+	//TODO: implement protobuf Marshalling, json marshalling is too much overhead
+	data, _ := json.Marshal(*trans)
+	trans.ID = sha3.Sum256(data)
+	return trans
 }
 
 // Stringer Interface override
@@ -32,12 +45,13 @@ func (t *Transaction) String() string {
 	return sb.String()
 }
 
+// We don't need this marshalling function anymore we're going to Marshal to Protobuf
 func (t *Transaction) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		SenderAddress   [AddressLength]byte `json:"sender_address"`
 		ReceiverAddress [AddressLength]byte `json:"receiver_address"`
-		Value           uint8               `json:"value"`
-		Gas             uint8               `json: gas`
+		Value           uint32              `json:"value"`
+		Gas             uint32              `json:"gas"`
 	}{
 		SenderAddress:   t.senderAddress,
 		ReceiverAddress: t.receiverAddress,

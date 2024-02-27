@@ -11,17 +11,16 @@ type MemPool struct {
 	mux          sync.Mutex
 	transactions []*Transaction
 	validator    *Account
-	idToTransMap map[string]*Transaction
+	idToTransMap map[[32]byte]*Transaction
 }
 
 func NewMemPool(acc *Account) *MemPool {
 	return &MemPool{
 		transactions: []*Transaction{},
-		idToTransMap: map[string]*Transaction{},
+		idToTransMap: map[[32]byte]*Transaction{},
 	}
 }
 
-// Write methods need to lock
 func (mp *MemPool) AddTransactionToPool(t *Transaction) {
 	heap.Push(mp, t)
 }
@@ -30,8 +29,7 @@ func (mp *MemPool) RemoveHighestGasTransaction() (*Transaction, error) {
 	return heap.Pop(mp).(*Transaction), nil
 }
 
-//Implement Heap Interface
-
+// Implement Heap Interface
 func (mp *MemPool) Pop() any {
 	mp.mux.Lock()
 	defer mp.mux.Unlock()

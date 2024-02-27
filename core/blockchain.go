@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"google.golang.org/grpc"
 	"log"
+	"net"
 	"strings"
 	"time"
 )
@@ -12,13 +14,28 @@ func init() {
 }
 
 func main() {
+	//Set up the server
+	lis, err := net.Listen("tcp", "9000")
+	if err != nil {
+		log.Fatalf("Failed to open port 9000: %v", err)
+	}
+	grpcServer := grpc.NewServer()
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to server grpcServer over port 9000: %v", err)
+	}
+	//check the network for any blockchain that being broadcasted, if so sync node's embedded db
+	//else read from db and spin up bc state
+	// bc := NewBlockChain()
+
 }
 
 type BlockChain struct {
-	memPool []*Transaction
-	chain   []*Block
+	accounts []*Account
+	memPool  []*Transaction
+	chain    []*Block
 }
 
+// Todo: we are only taking a slice of the underlying blockchain, this genesis block should only be called once
 func NewBlockChain() *BlockChain {
 	bc := new(BlockChain)
 	//Generates an Empty Block as the prevHash of the Genesis Block

@@ -1,0 +1,31 @@
+syntax = "proto3";
+package goChain;
+
+option go_package = "github.com/liangalv/goChain/core/types";
+
+
+//Define Transaction CRUD
+service TransactionService {
+    //Creates a new transaction
+    rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
+
+}
+
+message Transaction {
+    bytes senderAddress = 1;
+    bytes receiverAddress = 2;
+    uint32 value = 3;
+    uint32 gas = 4;
+}
+
+message CreateTransactionRequest {
+    Transaction transaction = 1;
+}
+
+message CreateTransactionResponse {
+    bool confirmation = 1;
+}
+
+
+
+

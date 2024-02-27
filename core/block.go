@@ -15,6 +15,7 @@ type Block struct {
 	prevHash     [32]byte
 	timestamp    int64
 	transactions []*Transaction
+	gasLimit     uint32
 }
 
 func (b *Block) Hash() [32]byte {
@@ -28,6 +29,10 @@ func NewBlock(nonce int, prevHash [32]byte) *Block {
 		nonce:     nonce,
 		prevHash:  prevHash,
 	}
+}
+
+// TODO
+func (b *Block) BuildBlock(mp *MemPool) {
 }
 
 // Stringify: Stringer interface implementation
