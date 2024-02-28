@@ -1,13 +1,11 @@
 package main
 
 import (
-	"crypto"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/crypto/sha3"
 	"strings"
 	"time"
-
-	"golang.org/x/crypto/sha3"
 )
 
 type Transaction struct {
@@ -41,7 +39,6 @@ func NewTransaction(i int, v, g uint32, s, r [AddressLength]byte) *Transaction {
 func (t *Transaction) String() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("%d coins: \n", t.value))
-	sb.WriteString(fmt.Sprintf("%x -> %x", t.senderAddress, t.receiverAddress))
 	return sb.String()
 }
 

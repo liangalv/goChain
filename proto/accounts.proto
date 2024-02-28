@@ -1,8 +1,19 @@
-syntax = "proto3"
+syntax = "proto3";
+package goChain;
 
-package liangalv.goChain.core
+option go_package = "github.com/liangalv/goChain/types";
 
-import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
+import "status.proto";
 
-option go_package = "github.com/liangalv/goChain/types"
+
+message CreateAccountRequest{
+    string passphrase = 1;
+}
+
+message CreateAccountReponse{
+    string mnenomic = 1;
+    string privateKey = 2;
+    string pubKey = 3;
+    response.status status = 4;
+}
+

@@ -3,27 +3,34 @@ package goChain;
 
 option go_package = "github.com/liangalv/goChain/core/types";
 
+import "status.proto";
 
 //Define Transaction CRUD
 service TransactionService {
     //Creates a new transaction
-    rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
-
+    rpc CreateTransaction(CreateTransactionRequest) returns (TransactionResponse);
+    //Send an array of transactions to another node
+    rpc SendTransactions(TransactionBatch) returns (TransactionResponse);
 }
-
-message Transaction {
-    bytes senderAddress = 1;
-    bytes receiverAddress = 2;
-    uint32 value = 3;
-    uint32 gas = 4;
+message TransactionMsg {
+    bytes ID = 1; 
+    bytes senderAddress = 2;
+    bytes receiverAddress = 3;
+    uint32 value = 4;
+    uint32 gas = 5;
+}
+message TransactionResponse {
+    response.status status = 1;
+}
+message TransactionBatch {
+    repeated TransactionMsg batch = 1;
 }
 
 message CreateTransactionRequest {
-    Transaction transaction = 1;
-}
-
-message CreateTransactionResponse {
-    bool confirmation = 1;
+    bytes senderAddress = 1;
+    bytes receiverAddress = 2;
+    uint32 value = 3; 
+    uint32 maxGas = 4;
 }
 
 

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package response;
+
+option go_package = "github.com/liangalv/goChain/core/types";
+
+enum status{
+    SUCCESS = 0;
+    FAILURE = 1;
+    INVALID_REQUEST = 3;
+} 
