@@ -1,10 +1,14 @@
 syntax = "proto3";
 package goChain;
 
-option go_package = "github.com/liangalv/goChain/types";
+option go_package = "github.com/liangalv/goChain/core/types";
 
 import "status.proto";
 
+
+service AccountService {
+    rpc CreateAccount(CreateAccountRequest) returns (CreateAccountReponse);
+}
 
 message CreateAccountRequest{
     string passphrase = 1;

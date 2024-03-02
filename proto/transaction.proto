@@ -14,10 +14,11 @@ service TransactionService {
 }
 message TransactionMsg {
     bytes ID = 1; 
-    bytes senderAddress = 2;
-    bytes receiverAddress = 3;
-    uint32 value = 4;
-    uint32 gas = 5;
+    int64 timestamp = 2;
+    bytes senderAddress = 3;
+    bytes receiverAddress = 4;
+    uint32 value = 5;
+    uint32 gas = 6;
 }
 message TransactionResponse {
     response.status status = 1;

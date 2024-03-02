@@ -1,38 +1,49 @@
-package main
+package core
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/liangalv/goChain/core/types"
 	"golang.org/x/crypto/sha3"
+	"google.golang.org/protobuf/proto"
 	"strings"
 	"time"
 )
 
 type Transaction struct {
-	timestamp       time.Time
-	ID              [32]byte
-	senderAddress   [AddressLength]byte
+	//112 Bytes per transaction
+	timestamp       int64               //24 bytes
+	ID              [32]byte            //32
+	senderAddress   [AddressLength]byte //20
 	receiverAddress [AddressLength]byte
-	index           int
-	value           uint32
+	index           int    //8
+	value           uint32 //4
 	gas             uint32
 }
 
 func NewTransaction(i int, v, g uint32, s, r [AddressLength]byte) *Transaction {
 	//TODO: Remember in the consensus engine you need to ensure that you're rejecting transaction with duplicates
-	time := time.Now()
 	trans := &Transaction{
-		timestamp:       time,
+		timestamp:       time.Now().Unix(),
 		senderAddress:   s,
 		receiverAddress: r,
 		value:           v,
 		gas:             g,
-		index:           i,
 	}
-	//TODO: implement protobuf Marshalling, json marshalling is too much overhead
-	data, _ := json.Marshal(*trans)
+	//TODO:error handling
+	data, _ := proto.Marshal(trans.ConvertToTransactionPbMsg())
 	trans.ID = sha3.Sum256(data)
 	return trans
+}
+
+// Helper method to convert to protoreflect.Protomessage type for pb marshalling
+func (t *Transaction) ConvertToTransactionPbMsg() *types.TransactionMsg {
+	return &types.TransactionMsg{
+		Timestamp:       t.timestamp,
+		SenderAddress:   t.senderAddress[:],
+		ReceiverAddress: t.receiverAddress[:],
+		Value:           t.value,
+		Gas:             t.gas,
+	}
 }
 
 // Stringer Interface override
@@ -40,20 +51,4 @@ func (t *Transaction) String() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("%d coins: \n", t.value))
 	return sb.String()
-}
-
-// We don't need this marshalling function anymore we're going to Marshal to Protobuf
-func (t *Transaction) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		SenderAddress   [AddressLength]byte `json:"sender_address"`
-		ReceiverAddress [AddressLength]byte `json:"receiver_address"`
-		Value           uint32              `json:"value"`
-		Gas             uint32              `json:"gas"`
-	}{
-		SenderAddress:   t.senderAddress,
-		ReceiverAddress: t.receiverAddress,
-		Value:           t.value,
-		Gas:             t.gas,
-	})
-
 }

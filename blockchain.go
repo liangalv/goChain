@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/liangalv/goChain/core"
+	"github.com/liangalv/goChain/core/services"
 	"google.golang.org/grpc"
 	"log"
 	"net"
 	"strings"
-	"time"
 )
 
 func init() {
@@ -19,9 +20,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to open port 9000: %v", err)
 	}
+	//Instantiate services
+	//TODO: separate networking concerns to network.go
+	ts := services.TransactionService{}
+
 	grpcServer := grpc.NewServer()
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to server grpcServer over port 9000: %v", err)
+		log.Fatalf("Failed to serve grpcServer over port 9000: %v", err)
 	}
 	//check the network for any blockchain that being broadcasted, if so sync node's embedded db
 	//else read from db and spin up bc state
@@ -30,32 +35,27 @@ func main() {
 }
 
 type BlockChain struct {
-	accounts []*Account
-	memPool  []*Transaction
-	chain    []*Block
+	accounts []*core.Account
+	memPool  []*core.Transaction
+	chain    []*core.Block
 }
 
 // Todo: we are only taking a slice of the underlying blockchain, this genesis block should only be called once
 func NewBlockChain() *BlockChain {
 	bc := new(BlockChain)
 	//Generates an Empty Block as the prevHash of the Genesis Block
-	bc.CreateBlock(0, (&Block{}).Hash(), make([]*Transaction, 0, 1000))
+	bc.CreateBlock(0, (&core.Block{}).Hash(), make([]*core.Transaction, 0, 1000))
 	return bc
 }
 
-func (bc *BlockChain) CreateBlock(nonce int, prevHash [32]byte, trans []*Transaction) *Block {
-	b := &Block{
-		nonce:        nonce,
-		prevHash:     prevHash,
-		timestamp:    time.Now().UnixNano(),
-		transactions: trans,
-	}
+func (bc *BlockChain) CreateBlock(nonce int, prevHash [32]byte, trans []*core.Transaction) *core.Block {
+	b := core.NewBlock(nonce, prevHash, trans)
 	bc.chain = append(bc.chain, b)
 	return b
 }
 
 // Helper Methods
-func (bc *BlockChain) LastBlock() *Block {
+func (bc *BlockChain) LastBlock() *core.Block {
 	return bc.chain[len(bc.chain)-1]
 }
 

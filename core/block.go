@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"encoding/hex"
@@ -10,6 +10,11 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+const (
+	//TODO: make the gaslimit dynamic
+	GASLIMIT = 30 * 1000000 //30 million
+)
+
 type Block struct {
 	nonce        int
 	prevHash     [32]byte
@@ -18,21 +23,20 @@ type Block struct {
 	gasLimit     uint32
 }
 
+// TODO: write proto file, change marshalling type
 func (b *Block) Hash() [32]byte {
 	m, _ := json.Marshal(b)
 	return sha3.Sum256(m)
 }
 
-func NewBlock(nonce int, prevHash [32]byte) *Block {
+func NewBlock(nonce int, prevHash [32]byte, trans []*Transaction) *Block {
 	return &Block{
-		timestamp: time.Now().UnixNano(),
-		nonce:     nonce,
-		prevHash:  prevHash,
+		timestamp:    time.Now().UnixNano(),
+		nonce:        nonce,
+		prevHash:     prevHash,
+		transactions: trans,
+		gasLimit:     GASLIMIT,
 	}
-}
-
-// TODO
-func (b *Block) BuildBlock(mp *MemPool) {
 }
 
 // Stringify: Stringer interface implementation
