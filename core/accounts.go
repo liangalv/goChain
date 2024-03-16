@@ -18,6 +18,7 @@ type Account struct {
 	address [AddressLength]byte
 	pubKey  *bip32.Key
 	privKey *bip32.Key
+	nonce   int64
 }
 
 func NewAccount(passPhrase string) *Account {
@@ -28,6 +29,7 @@ func NewAccount(passPhrase string) *Account {
 		address: address,
 		privKey: privKey,
 		pubKey:  pubKey,
+		nonce:   0,
 	}
 }
 

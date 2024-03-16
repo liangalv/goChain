@@ -10,6 +10,8 @@ import (
 TODO:
 mempools should have a finite size on each node
 -we can have a hard cap on the number of transactions on any one given mempool, there's too much overhead when keeping
+https://bitcoin.stackexchange.com/questions/96068/what-if-the-mempool-exceeds-300-mb
+consult this article on dynamic mempool sizing limits for futher implementation
 track of the amount of memory consumed by an individual object
 we have to find a way to see if a transaction has already been seen, but not in an in memory fashion
 -is there a way to do this with minmal overhead is LevelDb the only solution?

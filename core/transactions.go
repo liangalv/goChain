@@ -15,14 +15,16 @@ type Transaction struct {
 	ID              [32]byte            //32
 	senderAddress   [AddressLength]byte //20
 	receiverAddress [AddressLength]byte
-	index           int    //8
-	value           uint32 //4
-	gas             uint32
+	//this index is only specific to the application layer
+	index int    //8
+	value uint32 //4
+	gas   uint32 //4
 }
 
 func NewTransaction(i int, v, g uint32, s, r [AddressLength]byte) *Transaction {
 	//TODO: Remember in the consensus engine you need to ensure that you're rejecting transaction with duplicates
 	trans := &Transaction{
+		//apparently we need something called consensus based timestamp generation
 		timestamp:       time.Now().Unix(),
 		senderAddress:   s,
 		receiverAddress: r,
@@ -30,13 +32,18 @@ func NewTransaction(i int, v, g uint32, s, r [AddressLength]byte) *Transaction {
 		gas:             g,
 	}
 	//TODO:error handling
-	data, _ := proto.Marshal(trans.ConvertToTransactionPbMsg())
-	trans.ID = sha3.Sum256(data)
+	trans.ID = trans.hashTransaction()
 	return trans
 }
 
-// Helper method to convert to protoreflect.Protomessage type for pb marshalling
-func (t *Transaction) ConvertToTransactionPbMsg() *types.TransactionMsg {
+// Helper methods
+func (t *Transaction) hashTransaction() [32]byte {
+	data, _ := proto.Marshal(t.convertToTransactionPbMsg())
+	return sha3.Sum256(data)
+}
+
+// Convert to protoreflect.Protomessage type for pb marshalling
+func (t *Transaction) convertToTransactionPbMsg() *types.TransactionMsg {
 	return &types.TransactionMsg{
 		Timestamp:       t.timestamp,
 		SenderAddress:   t.senderAddress[:],

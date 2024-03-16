@@ -44,12 +44,12 @@ type BlockChain struct {
 func NewBlockChain() *BlockChain {
 	bc := new(BlockChain)
 	//Generates an Empty Block as the prevHash of the Genesis Block
-	bc.CreateBlock(0, (&core.Block{}).Hash(), make([]*core.Transaction, 0, 1000))
+	bc.CreateBlock((&core.Block{}).Hash(), make([]*core.Transaction, 0, 1000))
 	return bc
 }
 
-func (bc *BlockChain) CreateBlock(nonce int, prevHash [32]byte, trans []*core.Transaction) *core.Block {
-	b := core.NewBlock(nonce, prevHash, trans)
+func (bc *BlockChain) CreateBlock(prevHash [32]byte, trans []*core.Transaction) *core.Block {
+	b := core.NewBlock(prevHash, trans)
 	bc.chain = append(bc.chain, b)
 	return b
 }

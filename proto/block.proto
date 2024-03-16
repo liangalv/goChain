@@ -1,4 +1,15 @@
-syntax = "proto3"
-package types
+syntax = "proto3";
+package goChain;
 
-option go_package = "github.com/liangalv/goChain/core/types"
+option go_package = "github.com/liangalv/goChain/core/types";
+
+import "transaction.proto";
+
+message BlockMsg{
+    bytes ID = 1;
+    int64 timestamp = 2;
+    bytes parentHash = 3;
+    bytes trieRootHash = 4;
+    int32 gasLimit = 5;
+    repeated TransactionMsg transactions = 6;
+}

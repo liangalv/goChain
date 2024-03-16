@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	core "github.com/liangalv/goChain/core"
+	"github.com/liangalv/goChain/core"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
