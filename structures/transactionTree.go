@@ -3,6 +3,7 @@ package structures
 import (
 	"errors"
 	"golang.org/x/crypto/sha3"
+	"math"
 )
 
 /*
@@ -30,7 +31,7 @@ type TransactionTree struct {
 // Construct MerkleTree
 func (tt *TransactionTree) Construct() error {
 	if len(tt.transactionHashes) == 0 {
-		return errors.New("Tree contains no transactions")
+		return errors.New("tree contains no transactions")
 	}
 	//Ensure that we have an an even amount of leaves
 	if len(tt.transactionHashes)%2 != 0 {
@@ -48,28 +49,30 @@ func (tt *TransactionTree) Construct() error {
 	return nil
 }
 
-/*
-[leaf0, leaf1, leaf2, leaf3, hash01, hash23,merkleRoot]
-One more thing to consider, if we have a list of all transactions that went into the construction of the tree, we can very easily calculate iteratively where all the relevant parent nodes are by index
-*/
+/**/
 // Construct Merkle Proof for param transactionHash
-func (tt *TransactionTree) ConstructProof(transactionHash [32]byte) ([][32]byte, error) {
+func (tt *TransactionTree) ConstructProof(transactionHash [32]byte) (*[][32]byte, error) {
 	//Verify the membership of the transactionHash and return the index to construct proof
 	ind, ok := tt.verifyMembership(transactionHash)
 	if !ok {
-		return [][32]byte{}, errors.New("Transaction was not found in tree")
+		return nil, errors.New("transaction was not found in tree")
 	}
-	//Construct the proof array
-	//TODO: don't do this use bit flipping to test even/odd
-	proof := [][32]byte{transactionHash}
-	if ind%2 == 0 {
-		//append the right node
-		proof := append(proof, tt.tree[ind+1])
-	} else {
-		//append the left node
-		proof := append(proof, tt.tree[ind-1])
+	//If the Merkle Root was computed, this implies that transactionHashes reflects an even number of transactions and is therefore up to date
+	if len(tt.tree) == 0 {
+		return nil, errors.New("merkle root was never computed, proof could not be constructed")
 	}
-
+	proof := emptyProofArray(len(tt.transactionHashes))
+	//we can use the length of 'proof' here cause the make function populates the array with default values
+	totalSize := len(tt.transactionHashes)
+	for i := 0; i < len(proof); i++ {
+		//set path
+		proof[i] = tt.tree[ind^1]
+		//Calculate Parent Index
+		ind = tt.calculateParentInd(ind, totalSize)
+		//Set new totalsize for parent index calculation
+		totalSize += totalSize / 2
+	}
+	return &proof, nil
 }
 
 // Add a transaction to the list of transactionHashes (does not recalculate MerkleRoot)
@@ -78,7 +81,7 @@ func (tt *TransactionTree) Add(transactionHash [32]byte) error {
 	//ensure membership before attempting add
 	_, ok := tt.verifyMembership(transactionHash)
 	if ok {
-		return errors.New("Transaction is already in the tree")
+		return errors.New("transaction is already in the tree")
 	}
 	//Add element
 	tt.transactionHashes = append(tt.transactionHashes, transactionHash)
@@ -92,7 +95,7 @@ func (tt *TransactionTree) Delete(transactionHash [32]byte) error {
 	//ensure membership before attempting delete
 	ind, ok := tt.verifyMembership(transactionHash)
 	if !ok {
-		return errors.New("Transaction was not found in the tree")
+		return errors.New("transaction was not found in the tree")
 	}
 	//Remove the element
 	tt.transactionHashes = append(tt.transactionHashes[:ind], tt.transactionHashes[ind+1:]...)
@@ -109,23 +112,30 @@ func (tt *TransactionTree) SafeAdd(transactionHash [32]byte) error {
 		return ok
 	}
 	//Recalculate the MerkleRoot
-	tt.Construct()
+	err := tt.Construct()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (tt *TransactionTree) SafeDelete(transactionHash [32]byte) error {
-	ok := tt.Delete(transactionHash)
-	if ok != nil {
-		return ok
+	//Attempt to delete the transaction
+	err := tt.Delete(transactionHash)
+	if err != nil {
+		return err
 	}
 	//Recalculate the MerkleRoot
-	tt.Construct()
+	err = tt.Construct()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (tt *TransactionTree) VerifyProof(th [32]byte, proof [][32]byte) (bool, error) {
 	if len(tt.merkleRoot) == 0 {
-		return false, errors.New("Merkle Root has not been computed yet")
+		return false, errors.New("merkle root has not been computed yet")
 	}
 	for _, hash := range proof {
 		th = sha3.Sum256(append(th[:], hash[:]...))
@@ -149,6 +159,24 @@ func (tt *TransactionTree) verifyMembership(transactionHash [32]byte) (int, bool
 		}
 	}
 	return -1, false
+}
+
+// Constructs an empty proof array with (num of levels) - 1 capacity omitting rootLevel
+func emptyProofArray(length int) [][32]byte {
+	return make([][32]byte, int(math.Sqrt(float64(length))))
+}
+
+// calculates the parent index for a pair of hashes
+func (tt *TransactionTree) calculateParentInd(ind int, totalSize int) int {
+	siblingInd := ind ^ 1
+	origInd := ind
+	//Offset if we're not on level 0
+	if totalSize != len(tt.transactionHashes) {
+		siblingInd -= totalSize
+		origInd -= totalSize
+	}
+	offset := int(math.Min(float64(origInd), float64(siblingInd)))/2 + 1
+	return totalSize - 1 + offset
 }
 
 // Hash Pairs on the same level
